@@ -1,4 +1,6 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { loginRequest, registerRequest, fetchCurrentUser } from '../services/authService.js';
+import { getApiErrorMessage } from '../utils/getApiErrorMessage.js';
 
 const AuthContext = createContext();
 
@@ -10,95 +12,125 @@ export const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    // Check local storage for token
-    const storedToken = localStorage.getItem('getwork_token');
-    const storedUser = localStorage.getItem('getwork_user');
-    
-    if (storedToken && storedUser) {
-      try {
-        setUser(JSON.parse(storedUser));
-        setToken(storedToken);
-        setIsAuthenticated(true);
-      } catch (e) {
-        console.error(e);
-        localStorage.removeItem('getwork_user');
-        localStorage.removeItem('getwork_token');
-      }
-    }
-    setLoading(false);
+  const persistSession = useCallback((nextUser, nextToken) => {
+    setUser(nextUser);
+    setToken(nextToken);
+    setIsAuthenticated(true);
+    localStorage.setItem('getwork_user', JSON.stringify(nextUser));
+    localStorage.setItem('getwork_token', nextToken);
   }, []);
 
-  const login = async (email, password) => {
-    // MOCK API CALL
-    return new Promise((resolve, reject) => {
-      setTimeout(() => {
-        const mockToken = "mock_token_" + Date.now();
-        if (email.includes('employer')) {
-          const employer = { 
-            id: 1, 
-            email, 
-            role: 'JobGiver', 
-            name: 'Acme Corp',
-            walletBalance: 2450.00,
-            jobCredits: 12,
-            totalSpent: 12000.50,
-            activeJobs: 3,
-            hoursBooked: 340
-          };
-          setUser(employer);
-          setToken(mockToken);
-          setIsAuthenticated(true);
-          localStorage.setItem('getwork_user', JSON.stringify(employer));
-          localStorage.setItem('getwork_token', mockToken);
-          resolve(employer);
-        } else if (email.includes('worker')) {
-          const worker = { 
-            id: 2, 
-            email, 
-            role: 'Worker', 
-            name: 'John Doe',
-            walletBalance: 840.50,
-            hoursWorked: 120,
-            totalEarned: 4500.00,
-            activeJobs: 1,
-            completedJobs: 15,
-            rating: 4.8
-          };
-          setUser(worker);
-          setToken(mockToken);
-          setIsAuthenticated(true);
-          localStorage.setItem('getwork_user', JSON.stringify(worker));
-          localStorage.setItem('getwork_token', mockToken);
-          resolve(worker);
-        } else {
-          reject(new Error("Invalid credentials. Try 'employer@test.com' or 'worker@test.com'"));
-        }
-      }, 1000);
-    });
-  };
-
-  const register = async (userData) => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const mockToken = "mock_token_" + Date.now();
-        const newUser = { id: Date.now(), ...userData };
-        setUser(newUser);
-        setToken(mockToken);
-        setIsAuthenticated(true);
-        localStorage.setItem('getwork_user', JSON.stringify(newUser));
-        localStorage.setItem('getwork_token', mockToken);
-        resolve(newUser);
-      }, 1000);
-    });
-  };
-
-  const logout = () => {
+  const logout = useCallback(() => {
     setUser(null);
     setToken(null);
     setIsAuthenticated(false);
     localStorage.removeItem('getwork_user');
     localStorage.removeItem('getwork_token');
+  }, []);
+
+  const refreshUser = useCallback(async () => {
+    const storedToken = localStorage.getItem('getwork_token');
+    if (!storedToken) {
+      logout();
+      return null;
+    }
+    try {
+      const u = await fetchCurrentUser();
+      setUser(u);
+      localStorage.setItem('getwork_user', JSON.stringify(u));
+      return u;
+    } catch {
+      logout();
+      return null;
+    }
+  }, [logout]);
+
+  useEffect(() => {
+    const init = async () => {
+      const storedToken = localStorage.getItem('getwork_token');
+      const storedUser = localStorage.getItem('getwork_user');
+
+      if (storedToken && storedUser) {
+        try {
+          const parsed = JSON.parse(storedUser);
+          setUser(parsed);
+          setToken(storedToken);
+          setIsAuthenticated(true);
+          const u = await fetchCurrentUser();
+          setUser(u);
+          localStorage.setItem('getwork_user', JSON.stringify(u));
+        } catch (e) {
+          console.error(e);
+          localStorage.removeItem('getwork_user');
+          localStorage.removeItem('getwork_token');
+          setUser(null);
+          setToken(null);
+          setIsAuthenticated(false);
+        }
+      }
+      setLoading(false);
+    };
+    init();
+  }, []);
+
+  useEffect(() => {
+    const onExpired = () => {
+      logout();
+      const path = window.location.pathname;
+      if (path !== '/login' && path !== '/' && path !== '/choose-path' && path !== '/about' && !path.startsWith('/register')) {
+        window.location.replace('/login');
+      }
+    };
+    window.addEventListener('getwork:auth-expired', onExpired);
+    return () => window.removeEventListener('getwork:auth-expired', onExpired);
+  }, [logout]);
+
+  const login = async (email, password) => {
+    try {
+      const { token: t, user: u } = await loginRequest(email, password);
+      persistSession(u, t);
+      return u;
+    } catch (err) {
+      throw new Error(getApiErrorMessage(err));
+    }
+  };
+
+  const register = async (userData) => {
+    try {
+      const {
+        name,
+        email,
+        password,
+        role,
+        qualification,
+        skills,
+        businessName,
+        businessDetails,
+        primaryMobile,
+        alternateMobile,
+      } = userData;
+
+      const payload = {
+        name,
+        email,
+        password,
+        role,
+        qualification,
+        skills,
+        businessName,
+        businessDetails,
+        primaryMobile,
+        alternateMobile,
+        governmentId: typeof userData.governmentId === 'string' ? userData.governmentId : '',
+        profilePic: typeof userData.profilePic === 'string' ? userData.profilePic : '',
+      };
+
+      const { token: t, user: u } = await registerRequest(payload);
+      persistSession(u, t);
+      return u;
+    } catch (err) {
+      throw new Error(getApiErrorMessage(err));
+    }
   };
 
   const value = {
@@ -108,7 +140,8 @@ export const AuthProvider = ({ children }) => {
     loading,
     login,
     register,
-    logout
+    logout,
+    refreshUser,
   };
 
   return <AuthContext.Provider value={value}>{!loading && children}</AuthContext.Provider>;

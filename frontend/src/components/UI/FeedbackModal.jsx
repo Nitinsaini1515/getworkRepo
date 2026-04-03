@@ -9,20 +9,22 @@ const FeedbackModal = ({ isOpen, onClose, targetName = "Client/Worker", onSubmit
   const [comment, setComment] = useState('');
   const [submitted, setSubmitted] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (rating === 0) return;
-    
-    // Process submission logic (mock)
-    if (onSubmit) onSubmit({ rating, comment });
-    
-    setSubmitted(true);
-    setTimeout(() => {
-      setSubmitted(false);
-      setRating(0);
-      setComment('');
-      onClose();
-    }, 2000);
+
+    try {
+      if (onSubmit) await onSubmit({ rating, comment });
+      setSubmitted(true);
+      setTimeout(() => {
+        setSubmitted(false);
+        setRating(0);
+        setComment('');
+        onClose();
+      }, 2000);
+    } catch {
+      /* keep modal open; parent may show toast */
+    }
   };
 
   if (!isOpen && (!submitted && !isOpen)) return null;

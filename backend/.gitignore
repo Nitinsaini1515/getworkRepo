@@ -22,6 +22,9 @@
 # Local configuration that shouldn't be shared
 *.local
 
+### Uploads (local proof images) ###
+uploads/
+
 ### Node ###
 # Node.js dependency directory, logs, and environment files
 

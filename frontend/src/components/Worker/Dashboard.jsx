@@ -1,14 +1,18 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { Briefcase, IndianRupee, Clock, CheckCircle } from 'lucide-react';
 import Card from '../UI/Card';
 import Button from '../UI/Button';
 import SOSButton from '../UI/SOSButton';
-import { useAuth } from './../../Context/AuthContext';
+import { useAuth } from '../../Context/AuthContext';
 
 const WorkerDashboard = () => {
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
+
+  useEffect(() => {
+    refreshUser();
+  }, [refreshUser]);
 
   return (
     <div className="p-4 md:p-8 max-w-7xl mx-auto">

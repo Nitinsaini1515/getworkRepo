@@ -95,7 +95,7 @@ const Register = () => {
         else navigate('/worker/dashboard');
       }, 1500);
     } catch (err) {
-      setError('Registration failed. Please try again.');
+      setError(err.message || 'Registration failed. Please try again.');
     } finally {
       setIsLoading(false);
     }

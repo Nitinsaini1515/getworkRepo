@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Wallet as WalletIcon, ArrowDownRight, ArrowUpRight, CheckCircle } from 'lucide-react';
 import Card from '../UI/Card';
@@ -6,17 +6,29 @@ import Button from '../UI/Button';
 import Modal from '../UI/Modal';
 import Toast from '../UI/Toast';
 import { useAuth } from '../../Context/AuthContext';
-// import Card from '../UI/Card';
-// import Button from '../UI/Button';
-// import Modal from '../UI/Modal';
-// import Toast from '../UI/Toast';
-// import {useAuth} from "../../context/AuthContext"
+import { fetchWalletTransactions } from '../../services/walletService.js';
+import { formatTxDate } from '../../utils/formatTime.js';
 
-const Wallet = () => {
-  const { user } = useAuth();
+const WorkerWallet = () => {
+  const { user, refreshUser } = useAuth();
   const [isWithdrawOpen, setWithdrawOpen] = useState(false);
-  const [withdrawStatus, setWithdrawStatus] = useState('idle'); // idle, processing, complete
-  
+  const [withdrawStatus, setWithdrawStatus] = useState('idle');
+  const [transactions, setTransactions] = useState([]);
+
+  const loadTx = useCallback(async () => {
+    try {
+      const rows = await fetchWalletTransactions();
+      setTransactions(rows || []);
+    } catch {
+      setTransactions([]);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadTx();
+    refreshUser();
+  }, [loadTx, refreshUser]);
+
   const handleWithdraw = () => {
     setWithdrawStatus('processing');
     setTimeout(() => {
@@ -27,6 +39,15 @@ const Wallet = () => {
       }, 2000);
     }, 2000);
   };
+
+  const displayTx = transactions.slice(0, 8).map((tx) => ({
+    id: tx.id,
+    type: tx.type === 'credit' || tx.type === 'addition' ? 'credit' : 'debit',
+    title: tx.description || 'Transaction',
+    amount: `₹${Number(tx.amount).toFixed(0)}`,
+    date: formatTxDate(tx.createdAt),
+    status: tx.type === 'deduction' ? 'Completed' : 'Cleared',
+  }));
 
   return (
     <div className="p-4 md:p-8 max-w-5xl mx-auto">
@@ -59,7 +80,7 @@ const Wallet = () => {
           <Card className="flex items-center justify-between p-6">
             <div>
               <p className="text-slate-400 text-sm">Pending Clearing</p>
-              <p className="text-2xl font-bold text-slate-200">₹1,200</p>
+              <p className="text-2xl font-bold text-slate-200">₹0</p>
             </div>
             <div className="w-12 h-12 rounded-full bg-orange-500/10 flex items-center justify-center text-orange-400">
               <ClockIcon size={24} />
@@ -71,29 +92,29 @@ const Wallet = () => {
       <h3 className="text-xl font-bold mb-4">Transaction History</h3>
       <Card className="p-0 overflow-hidden">
         <div className="divide-y divide-slate-800">
-          {[
-            { id: 1, type: 'credit', title: 'Payment for Event Setup', amount: '₹1,500', date: 'Today, 2:30 PM', status: 'Cleared' },
-            { id: 2, type: 'debit', title: 'Withdrawal to HDFC Bank ****1234', amount: '₹4,000', date: 'Oct 12, 9:00 AM', status: 'Completed' },
-            { id: 3, type: 'credit', title: 'Payment for Warehouse Shift', amount: '₹2,500', date: 'Oct 10, 6:15 PM', status: 'Cleared' },
-          ].map(tx => (
-            <div key={tx.id} className="p-5 flex items-center justify-between hover:bg-slate-800/20 transition-colors">
-              <div className="flex items-center gap-4">
-                <div className={`w-10 h-10 rounded-full flex flex-shrink-0 items-center justify-center ${tx.type === 'debit' ? 'bg-slate-800 text-slate-400' : 'bg-emerald-500/10 text-emerald-400'}`}>
-                  {tx.type === 'debit' ? <ArrowUpRight size={20} /> : <ArrowDownRight size={20} />}
+          {displayTx.length === 0 ? (
+            <div className="p-6 text-slate-500 text-sm">No transactions yet.</div>
+          ) : (
+            displayTx.map(tx => (
+              <div key={tx.id} className="p-5 flex items-center justify-between hover:bg-slate-800/20 transition-colors">
+                <div className="flex items-center gap-4">
+                  <div className={`w-10 h-10 rounded-full flex flex-shrink-0 items-center justify-center ${tx.type === 'debit' ? 'bg-slate-800 text-slate-400' : 'bg-emerald-500/10 text-emerald-400'}`}>
+                    {tx.type === 'debit' ? <ArrowUpRight size={20} /> : <ArrowDownRight size={20} />}
+                  </div>
+                  <div>
+                    <p className="font-bold text-slate-200">{tx.title}</p>
+                    <p className="text-xs text-slate-500 flex items-center gap-2">
+                      {tx.date} <span className="w-1 h-1 bg-slate-600 rounded-full"></span>
+                      <span className={tx.type === 'debit' ? "text-slate-400" : "text-emerald-500"}>{tx.status}</span>
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <p className="font-bold text-slate-200">{tx.title}</p>
-                  <p className="text-xs text-slate-500 flex items-center gap-2">
-                    {tx.date} <span className="w-1 h-1 bg-slate-600 rounded-full"></span> 
-                    <span className={tx.type === 'debit' ? "text-slate-400" : "text-emerald-500"}>{tx.status}</span>
-                  </p>
-                </div>
+                <p className={`font-bold ${tx.type === 'debit' ? 'text-slate-300' : 'text-emerald-400'}`}>
+                  {tx.type === 'debit' ? '-' : '+'}{tx.amount}
+                </p>
               </div>
-              <p className={`font-bold ${tx.type === 'debit' ? 'text-slate-300' : 'text-emerald-400'}`}>
-                {tx.type === 'debit' ? '-' : '+'}{tx.amount}
-              </p>
-            </div>
-          ))}
+            ))
+          )}
         </div>
       </Card>
 
@@ -135,4 +156,4 @@ const Wallet = () => {
 
 const ClockIcon = ({size}) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>;
 
-export default Wallet;
+export default WorkerWallet;

@@ -1,26 +1,39 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { MapPin, User, Mail, Shield, CheckCircle } from 'lucide-react';
-// import Card from './Ui/Card';
 import Card from '../UI/Card';
 import Input from '../UI/Input';
 import Button from '../UI/Button';
 import Toast from '../UI/Toast';
-import { useAuth } from './../../Context/AuthContext';
+import { useAuth } from '../../Context/AuthContext';
+import { updateWorkerAvailability } from '../../services/workersService.js';
+import { getApiErrorMessage } from '../../utils/getApiErrorMessage.js';
 
 const WorkerProfile = () => {
-  const { user } = useAuth();
-  const [isAvailable, setIsAvailable] = useState(false);
-  const [toast, setToast] = useState({ show: false, message: '' });
+  const { user, refreshUser } = useAuth();
+  const [isAvailable, setIsAvailable] = useState(!!user?.isAvailable);
+  const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
 
-  const toggleAvailability = () => {
-    setIsAvailable(!isAvailable);
-    setToast({ 
-      show: true, 
-      message: !isAvailable 
-        ? "Status updated. Employers nearby have been notified!" 
-        : "You are now shown as Not Available." 
-    });
+  useEffect(() => {
+    setIsAvailable(!!user?.isAvailable);
+  }, [user?.isAvailable]);
+
+  const toggleAvailability = async () => {
+    const next = !isAvailable;
+    try {
+      await updateWorkerAvailability(next);
+      setIsAvailable(next);
+      await refreshUser();
+      setToast({
+        show: true,
+        type: 'success',
+        message: next
+          ? 'Status updated. Employers nearby have been notified!'
+          : 'You are now shown as Not Available.',
+      });
+    } catch (e) {
+      setToast({ show: true, type: 'error', message: getApiErrorMessage(e) });
+    }
   };
 
   return (
@@ -107,7 +120,7 @@ const WorkerProfile = () => {
               </div>
               <div className="flex justify-between py-2">
                 <span className="text-slate-400">Lifetime Rating</span>
-                <span className="font-bold text-yellow-500 flex items-center">4.8 ★</span>
+                <span className="font-bold text-yellow-500 flex items-center">{user?.rating != null ? user.rating : '—'} ★</span>
               </div>
             </div>
           </Card>
@@ -133,7 +146,7 @@ const WorkerProfile = () => {
           </Card>
         </div>
       </div>
-      <Toast message={toast.message} isVisible={toast.show} onClose={() => setToast({show: false, message: ''})} type="success" />
+      <Toast message={toast.message} isVisible={toast.show} onClose={() => setToast({ show: false, message: '', type: 'success' })} type={toast.type === 'error' ? 'error' : 'success'} />
     </div>
   );
 };

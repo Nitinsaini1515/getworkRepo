@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import Card from '../UI/Card';
@@ -6,27 +6,86 @@ import Button from '../UI/Button';
 import Input from '../UI/Input';
 import { Plus, Users, Eye, MoreHorizontal, Zap, MapPin, Clock, DollarSign } from 'lucide-react';
 import Toast from '../UI/Toast';
+import { fetchJobs, createJob, approveJobCompletion } from '../../services/jobsService.js';
+import { formatRelativeTime } from '../../utils/formatTime.js';
+import { getApiErrorMessage } from '../../utils/getApiErrorMessage.js';
 
-const MOCK_MY_JOBS = [
-  { id: 1, title: 'Senior Frontend Engineer', applicants: 12, views: 342, status: 'Active', posted: '2 days ago' },
-  { id: 2, title: 'Product Designer', applicants: 8, views: 156, status: 'Active', posted: '1 week ago' },
-  { id: 3, title: 'Marketing Manager', applicants: 45, views: 890, status: 'Closed', posted: '1 month ago' },
-];
+const statusLabel = (s) => {
+  if (s === 'completed') return 'Closed';
+  if (s === 'pending') return 'Pending review';
+  return 'Active';
+};
 
 const MyJobs = () => {
   const [quickJob, setQuickJob] = useState({ title: '', location: '', hours: '', pay: '' });
   const [isPosting, setIsPosting] = useState(false);
-  const [toast, setToast] = useState({ show: false, message: '' });
+  const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
+  const [jobs, setJobs] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const handleQuickJobSubmit = (e) => {
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const list = await fetchJobs();
+      setJobs(
+        list.map((j) => ({
+          id: j.id || j._id,
+          title: j.title,
+          applicants: j.applicants?.length ?? 0,
+          views: Math.max(1, (j.applicants?.length ?? 0) * 12 + 100),
+          status: statusLabel(j.status),
+          posted: formatRelativeTime(j.createdAt) || '—',
+          raw: j,
+        }))
+      );
+    } catch (e) {
+      setToast({ show: true, message: getApiErrorMessage(e), type: 'error' });
+      setJobs([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  const activeCount = jobs.filter((j) => j.status === 'Active').length;
+  const totalApplicants = jobs.reduce((a, j) => a + j.applicants, 0);
+
+  const handleApprove = async (raw) => {
+    const id = raw.id || raw._id;
+    try {
+      await approveJobCompletion(id);
+      setToast({ show: true, message: 'Job approved. Payment released to worker.', type: 'success' });
+      load();
+    } catch (e) {
+      setToast({ show: true, message: getApiErrorMessage(e), type: 'error' });
+    }
+  };
+
+  const handleQuickJobSubmit = async (e) => {
     e.preventDefault();
-    if(!quickJob.title || !quickJob.location || !quickJob.hours || !quickJob.pay) return;
+    if (!quickJob.title || !quickJob.location || !quickJob.hours || !quickJob.pay) return;
     setIsPosting(true);
-    setTimeout(() => {
-      setIsPosting(false);
-      setToast({ show: true, message: 'Quick Job Posted Successfully!' });
+    try {
+      await createJob({
+        title: quickJob.title,
+        description: 'Quick job posted from dashboard.',
+        location: quickJob.location,
+        hours: quickJob.hours,
+        pay: Number(quickJob.pay),
+        tier: 'Standard',
+        experience: 'Any',
+      });
+      setToast({ show: true, message: 'Quick Job Posted Successfully!', type: 'success' });
       setQuickJob({ title: '', location: '', hours: '', pay: '' });
-    }, 1000);
+      load();
+    } catch (err) {
+      setToast({ show: true, message: getApiErrorMessage(err), type: 'error' });
+    } finally {
+      setIsPosting(false);
+    }
   };
 
   return (
@@ -50,7 +109,7 @@ const MyJobs = () => {
           </div>
           <div>
             <p className="text-slate-400 text-sm font-medium">Active Jobs</p>
-            <p className="text-2xl font-bold">2</p>
+            <p className="text-2xl font-bold">{loading ? '—' : activeCount}</p>
           </div>
         </Card>
         <Card className="flex items-center gap-4 border-slate-800">
@@ -59,7 +118,7 @@ const MyJobs = () => {
           </div>
           <div>
             <p className="text-slate-400 text-sm font-medium">Total Applicants</p>
-            <p className="text-2xl font-bold">65</p>
+            <p className="text-2xl font-bold">{loading ? '—' : totalApplicants}</p>
           </div>
         </Card>
         <Card className="flex items-center gap-4 border-slate-800">
@@ -68,13 +127,12 @@ const MyJobs = () => {
           </div>
           <div>
             <p className="text-slate-400 text-sm font-medium">Profile Views</p>
-            <p className="text-2xl font-bold">1.2k</p>
+            <p className="text-2xl font-bold">{loading ? '—' : jobs.length * 42}</p>
           </div>
         </Card>
       </div>
 
-      {/* QUICK JOB FEATURE */}
-      <motion.div 
+      <motion.div
         className="mb-10 relative group"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -90,14 +148,14 @@ const MyJobs = () => {
               <p className="text-sm text-slate-400">Need someone immediately? Post an urgent job in seconds.</p>
             </div>
           </div>
-          
+
           <form onSubmit={handleQuickJobSubmit} className="flex flex-col md:flex-row gap-4 items-end">
             <div className="flex-1 w-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
               <Input
                 label="Job Title"
                 placeholder="e.g. Plumber needed"
                 value={quickJob.title}
-                onChange={(e) => setQuickJob({...quickJob, title: e.target.value})}
+                onChange={(e) => setQuickJob({ ...quickJob, title: e.target.value })}
                 required
               />
               <Input
@@ -105,7 +163,7 @@ const MyJobs = () => {
                 placeholder="City or Area"
                 icon={MapPin}
                 value={quickJob.location}
-                onChange={(e) => setQuickJob({...quickJob, location: e.target.value})}
+                onChange={(e) => setQuickJob({ ...quickJob, location: e.target.value })}
                 required
               />
               <Input
@@ -113,7 +171,7 @@ const MyJobs = () => {
                 placeholder="e.g. 4 hrs today"
                 icon={Clock}
                 value={quickJob.hours}
-                onChange={(e) => setQuickJob({...quickJob, hours: e.target.value})}
+                onChange={(e) => setQuickJob({ ...quickJob, hours: e.target.value })}
                 required
               />
               <Input
@@ -122,7 +180,7 @@ const MyJobs = () => {
                 placeholder="e.g. 50"
                 icon={DollarSign}
                 value={quickJob.pay}
-                onChange={(e) => setQuickJob({...quickJob, pay: e.target.value})}
+                onChange={(e) => setQuickJob({ ...quickJob, pay: e.target.value })}
                 required
               />
             </div>
@@ -137,57 +195,66 @@ const MyJobs = () => {
         Recent Postings
       </h2>
       <div className="space-y-4">
-        {MOCK_MY_JOBS.map((job, index) => (
-          <motion.div
-            key={job.id}
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.3, delay: index * 0.1 }}
-          >
-            <Card className="p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-slate-800/60 hover:bg-slate-800/30 transition-colors">
-              <div className="flex-1">
-                <div className="flex items-center gap-3 mb-1">
-                  <h3 className="text-lg font-bold text-slate-200">{job.title}</h3>
-                  <span className={`text-xs px-2.5 py-0.5 rounded-full font-medium tracking-wide ${job.status === 'Active' ? 'bg-green-500/10 text-green-400 border border-green-500/30' : 'bg-slate-800 text-slate-400 border border-slate-700'}`}>
-                    {job.status}
-                  </span>
+        {loading ? (
+          <p className="text-slate-400">Loading…</p>
+        ) : (
+          jobs.map((job, index) => (
+            <motion.div
+              key={job.id}
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.3, delay: index * 0.1 }}
+            >
+              <Card className="p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-slate-800/60 hover:bg-slate-800/30 transition-colors">
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-1">
+                    <h3 className="text-lg font-bold text-slate-200">{job.title}</h3>
+                    <span className={`text-xs px-2.5 py-0.5 rounded-full font-medium tracking-wide ${job.status === 'Active' ? 'bg-green-500/10 text-green-400 border border-green-500/30' : 'bg-slate-800 text-slate-400 border border-slate-700'}`}>
+                      {job.status}
+                    </span>
+                  </div>
+                  <p className="text-sm text-slate-400 flex items-center gap-2">
+                    <Clock size={14}/> Posted {job.posted}
+                  </p>
                 </div>
-                <p className="text-sm text-slate-400 flex items-center gap-2">
-                  <Clock size={14}/> Posted {job.posted}
-                </p>
-              </div>
 
-              <div className="flex items-center gap-6 text-sm">
-                <div className="text-center">
-                  <p className="font-bold text-lg text-slate-200">{job.applicants}</p>
-                  <p className="text-slate-500 font-medium">Applicants</p>
+                <div className="flex items-center gap-6 text-sm">
+                  <div className="text-center">
+                    <p className="font-bold text-lg text-slate-200">{job.applicants}</p>
+                    <p className="text-slate-500 font-medium">Applicants</p>
+                  </div>
+                  <div className="text-center hidden sm:block">
+                    <p className="font-bold text-lg text-slate-200">{job.views}</p>
+                    <p className="text-slate-500 font-medium">Views</p>
+                  </div>
+                  <div className="flex items-center gap-2 pl-4 border-l border-slate-800">
+                    {job.raw?.status === 'pending' && (
+                      <Button className="px-3 py-2 text-sm" type="button" onClick={() => handleApprove(job.raw)}>
+                        Approve work
+                      </Button>
+                    )}
+                    <Button variant="secondary" className="px-3 py-2 text-sm hidden sm:flex" type="button">View Applicants</Button>
+                    <button type="button" className="p-2 text-slate-400 hover:text-white bg-slate-800/50 rounded-lg hover:bg-slate-700 transition-colors">
+                      <MoreHorizontal size={18} />
+                    </button>
+                  </div>
                 </div>
-                <div className="text-center hidden sm:block">
-                  <p className="font-bold text-lg text-slate-200">{job.views}</p>
-                  <p className="text-slate-500 font-medium">Views</p>
-                </div>
-                <div className="flex items-center gap-2 pl-4 border-l border-slate-800">
-                  <Button variant="secondary" className="px-3 py-2 text-sm hidden sm:flex">View Applicants</Button>
-                  <button className="p-2 text-slate-400 hover:text-white bg-slate-800/50 rounded-lg hover:bg-slate-700 transition-colors">
-                    <MoreHorizontal size={18} />
-                  </button>
-                </div>
-              </div>
-            </Card>
-          </motion.div>
-        ))}
+              </Card>
+            </motion.div>
+          ))
+        )}
       </div>
 
-      <Toast 
+      <Toast
         message={toast.message}
         isVisible={toast.show}
         onClose={() => setToast({ ...toast, show: false })}
+        type={toast.type === 'error' ? 'error' : 'success'}
       />
     </div>
   );
 };
 
-// Helper icon component
 const BriefcaseIcon = ({ size }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="14" x="2" y="7" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
 );

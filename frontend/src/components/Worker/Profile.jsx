@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { MapPin, User, Mail, Shield, CheckCircle } from 'lucide-react';
 // import Card from './Ui/Card';

@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Wallet as WalletIcon, ArrowDownRight, ArrowUpRight, Plus, RefreshCw } from 'lucide-react';
-// import Card from '../Ui/Card';
-// import Button from '../Ui/Button';
-// import Input from '../Ui/Input';
-// import Modal from '../Ui/Modal';
-// import Toast from '../Ui/Toast';
-// import Card from '../Ui/Card';
+import Card from '../UI/Card';
+import Button from '../UI/Button';
+import Input from '../UI/Input';
+import Modal from '../UI/Modal';
+import Toast from '../UI/Toast';
 import { useAuth } from '../../Context/AuthContext';
 
 const Wallet = () => {

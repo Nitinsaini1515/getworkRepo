@@ -31,9 +31,13 @@ import WorkerProfile from './components/Worker/Profile';
 const ProtectedRoute = ({ children, allowedRole }) => {
   const { user, loading } = useAuth();
   
-  if (loading) return <div>Loading...</div>;
-  if (!user) return <Navigate to="/login" />;
-  if (allowedRole && user.role !== allowedRole) return <Navigate to="/" />;
+  if (loading) return (
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+    </div>
+  );
+  if (!user) return <Navigate to="/login" replace />;
+  if (allowedRole && user.role !== allowedRole) return <Navigate to="/" replace />;
 
   return children;
 };
@@ -46,7 +50,7 @@ const App = () => {
   return (
     <div className="min-h-screen bg-slate-950 text-slate-300 selection:bg-indigo-500/30 font-sans">
       <Navbar />
-      <Sidebar />
+      {isDashboardLayout && <Sidebar />}
       <main className={isDashboardLayout ? "md:pl-64 pt-16" : "pt-16"}>
         <Routes>
           {/* Public Routes */}
@@ -55,6 +59,13 @@ const App = () => {
           <Route path="/login" element={<Login />} />
           <Route path="/register/:role" element={<Register />} />
           <Route path="/about" element={<div className="pt-24 text-center">About GetWork V2...</div>} />
+
+          {/* Alias Routes */}
+          <Route path="/dashboard" element={<ProtectedRoute>{user?.role === 'Worker' ? <Navigate to="/worker/dashboard" replace /> : <Navigate to="/giver/dashboard" replace />}</ProtectedRoute>} />
+          <Route path="/dashboard/worker" element={<Navigate to="/worker/dashboard" replace />} />
+          <Route path="/dashboard/employer" element={<Navigate to="/giver/dashboard" replace />} />
+          <Route path="/profile" element={<ProtectedRoute>{user?.role === 'Worker' ? <Navigate to="/worker/profile" replace /> : <Navigate to="/giver/profile" replace />}</ProtectedRoute>} />
+          <Route path="/profile/:id" element={<ProtectedRoute>{user?.role === 'Worker' ? <Navigate to="/worker/profile" replace /> : <Navigate to="/giver/profile" replace />}</ProtectedRoute>} />
 
           {/* JobGiver (Employer) Routes */}
           <Route path="/giver/dashboard" element={<ProtectedRoute allowedRole="JobGiver"><MyJobs /></ProtectedRoute>} />

@@ -6,16 +6,24 @@ export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
+  const [token, setToken] = useState(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Simulate checking local storage or token
+    // Check local storage for token
+    const storedToken = localStorage.getItem('getwork_token');
     const storedUser = localStorage.getItem('getwork_user');
-    if (storedUser) {
+    
+    if (storedToken && storedUser) {
       try {
         setUser(JSON.parse(storedUser));
+        setToken(storedToken);
+        setIsAuthenticated(true);
       } catch (e) {
         console.error(e);
+        localStorage.removeItem('getwork_user');
+        localStorage.removeItem('getwork_token');
       }
     }
     setLoading(false);
@@ -25,6 +33,7 @@ export const AuthProvider = ({ children }) => {
     // MOCK API CALL
     return new Promise((resolve, reject) => {
       setTimeout(() => {
+        const mockToken = "mock_token_" + Date.now();
         if (email.includes('employer')) {
           const employer = { 
             id: 1, 
@@ -38,7 +47,10 @@ export const AuthProvider = ({ children }) => {
             hoursBooked: 340
           };
           setUser(employer);
+          setToken(mockToken);
+          setIsAuthenticated(true);
           localStorage.setItem('getwork_user', JSON.stringify(employer));
+          localStorage.setItem('getwork_token', mockToken);
           resolve(employer);
         } else if (email.includes('worker')) {
           const worker = { 
@@ -54,7 +66,10 @@ export const AuthProvider = ({ children }) => {
             rating: 4.8
           };
           setUser(worker);
+          setToken(mockToken);
+          setIsAuthenticated(true);
           localStorage.setItem('getwork_user', JSON.stringify(worker));
+          localStorage.setItem('getwork_token', mockToken);
           resolve(worker);
         } else {
           reject(new Error("Invalid credentials. Try 'employer@test.com' or 'worker@test.com'"));
@@ -66,9 +81,13 @@ export const AuthProvider = ({ children }) => {
   const register = async (userData) => {
     return new Promise((resolve) => {
       setTimeout(() => {
+        const mockToken = "mock_token_" + Date.now();
         const newUser = { id: Date.now(), ...userData };
         setUser(newUser);
+        setToken(mockToken);
+        setIsAuthenticated(true);
         localStorage.setItem('getwork_user', JSON.stringify(newUser));
+        localStorage.setItem('getwork_token', mockToken);
         resolve(newUser);
       }, 1000);
     });
@@ -76,11 +95,16 @@ export const AuthProvider = ({ children }) => {
 
   const logout = () => {
     setUser(null);
+    setToken(null);
+    setIsAuthenticated(false);
     localStorage.removeItem('getwork_user');
+    localStorage.removeItem('getwork_token');
   };
 
   const value = {
     user,
+    token,
+    isAuthenticated,
     loading,
     login,
     register,

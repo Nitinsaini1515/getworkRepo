@@ -29,6 +29,8 @@ const ChatBox = () => {
   }, [messages, isOpen]);
 
   if (!user) return null;
+  const showChat = user.activeJobs > 0 || user.jobApplied || user.jobAccepted;
+  if (!showChat) return null;
 
   const myId = user.id;
 

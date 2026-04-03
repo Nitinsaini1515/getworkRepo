@@ -13,7 +13,7 @@ const INITIAL_NOTIFICATIONS = [
 ];
 
 const Navbar = () => {
-  const { user, logout } = useAuth();
+  const { user, isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
   const [showNotifications, setShowNotifications] = useState(false);
   const [notifications, setNotifications] = useState(INITIAL_NOTIFICATIONS);
@@ -53,32 +53,24 @@ const Navbar = () => {
         </Link>
 
         <div className="flex items-center gap-6">
-          {!user ? (
+          {!isAuthenticated ? (
             <>
+              <Link to="/" className="text-sm font-medium text-slate-300 hover:text-white transition-colors">Home</Link>
               <Link to="/about" className="text-sm font-medium text-slate-300 hover:text-white transition-colors">About</Link>
               <div className="flex gap-3">
                 <Link to="/login">
-                  <Button variant="ghost" className="hidden sm:flex text-sm">Log in</Button>
+                  <Button variant="ghost" className="hidden sm:flex text-sm">Login</Button>
                 </Link>
                 <Link to="/choose-path">
-                  <Button variant="primary" className="text-sm px-5">Get Started</Button>
+                  <Button variant="primary" className="text-sm px-5">Register</Button>
                 </Link>
               </div>
             </>
           ) : (
             <>
-              {user.role === 'JobGiver' && (
-                <>
-                  <Link to="/giver/dashboard" className="text-sm font-medium text-slate-300 hover:text-white transition-colors">Dashboard</Link>
-                  <Link to="/giver/post-job" className="text-sm font-medium text-slate-300 hover:text-white transition-colors">Post a Job</Link>
-                </>
-              )}
-              {user.role === 'Worker' && (
-                <>
-                  <Link to="/worker/dashboard" className="text-sm font-medium text-slate-300 hover:text-white transition-colors">Dashboard</Link>
-                  <Link to="/worker/jobs" className="text-sm font-medium text-slate-300 hover:text-white transition-colors">Find Work</Link>
-                </>
-              )}
+              <Link to="/dashboard" className="text-sm font-medium text-slate-300 hover:text-white transition-colors">Dashboard</Link>
+              <Link to="/profile" className="text-sm font-medium text-slate-300 hover:text-white transition-colors">Profile</Link>
+
               <div className="flex items-center gap-5 ml-4 pl-4 border-l border-slate-800 relative">
                 
                 {/* Notifications Dropdown */}

@@ -1,16 +1,29 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { AlertTriangle, PhoneCall, X } from 'lucide-react';
+import { AlertTriangle, PhoneCall, X, MessageSquare, Mail } from 'lucide-react';
 
 const SOSButton = () => {
-  const [isCalling, setIsCalling] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
+  const [actionLabel, setActionLabel] = useState(null);
+  const [actionDesc, setActionDesc] = useState(null);
   
-  const handleSOSClick = () => {
-    setIsCalling(true);
-    // Simulate auto hang up after 5 seconds
-    setTimeout(() => {
-      setIsCalling(false);
-    }, 5000);
+  const handleAction = (type) => {
+    if (type === 'call') {
+      setActionLabel("Calling emergency contact...");
+      setActionDesc("Alerting authorities and your alternate mobile number.");
+    } else if (type === 'sms') {
+      setActionLabel("Sending Emergency SMS...");
+      setActionDesc("Message sent: 'I am not feeling safe. My live location: [Mock Location, Bandra]'");
+    } else if (type === 'email') {
+      setActionLabel("Sending Emergency Email...");
+      setActionDesc("To: alternate@contact.com | Subject: Emergency Help Needed | Message: I am not feeling safe. My live location: [Mock Location]");
+    }
+  };
+
+  const closeModal = () => {
+    setIsOpen(false);
+    setActionLabel(null);
+    setActionDesc(null);
   };
 
   return (
@@ -18,7 +31,7 @@ const SOSButton = () => {
       <motion.button
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
-        onClick={handleSOSClick}
+        onClick={() => setIsOpen(true)}
         className="relative bg-red-600 hover:bg-red-500 text-white font-bold py-3 px-6 rounded-full shadow-[0_0_20px_rgba(220,38,38,0.6)] flex items-center gap-2 overflow-hidden outline-none"
       >
         <motion.div
@@ -27,12 +40,12 @@ const SOSButton = () => {
           className="absolute inset-0 bg-red-500 rounded-full z-0"
           style={{ mixBlendMode: 'screen' }}
         />
-        <AlertTriangle size={20} className="relative z-10" />
+        <AlertTriangle size={20} className="relative z-10 animate-pulse" />
         <span className="relative z-10 tracking-wider">SOS EMERGENCY</span>
       </motion.button>
 
       <AnimatePresence>
-        {isCalling && (
+        {isOpen && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -47,23 +60,46 @@ const SOSButton = () => {
             >
               <div className="absolute top-0 left-0 w-full h-1 bg-red-500 shadow-[0_0_10px_rgba(239,68,68,1)]" />
               
-              <motion.div 
-                animate={{ rotate: [0, -10, 10, -10, 10, 0] }}
-                transition={{ duration: 0.5, repeat: Infinity, repeatDelay: 1 }}
-                className="w-20 h-20 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-6 border border-red-500/30 shadow-[0_0_30px_rgba(239,68,68,0.4)]"
-              >
-                <PhoneCall size={32} className="text-red-400" />
-              </motion.div>
-              
-              <h2 className="text-2xl font-bold text-white mb-2">Emergency SOS</h2>
-              <p className="text-red-300 font-medium mb-1">Calling Emergency Contact...</p>
-              <p className="text-slate-400 text-sm mb-8">Alerting authorities and your alternate mobile number.</p>
+              {!actionLabel ? (
+                <>
+                  <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-6 border border-red-500/30">
+                    <AlertTriangle size={32} className="text-red-400" />
+                  </div>
+                  <h2 className="text-2xl font-bold text-white mb-2">Emergency Help</h2>
+                  <p className="text-slate-300 text-sm mb-6">Choose how you want to be rescued. This will send your live location to your emergency contacts.</p>
+                  
+                  <div className="space-y-3 mb-6">
+                    <button onClick={() => handleAction('call')} className="w-full bg-red-600 hover:bg-red-500 text-white font-bold py-3 px-4 rounded-xl flex items-center justify-between transition-colors">
+                      <span className="flex items-center gap-2"><PhoneCall size={20}/> Call Authorities</span>
+                    </button>
+                    <button onClick={() => handleAction('sms')} className="w-full bg-orange-600 hover:bg-orange-500 text-white font-bold py-3 px-4 rounded-xl flex items-center justify-between transition-colors">
+                      <span className="flex items-center gap-2"><MessageSquare size={20}/> Send Alert SMS</span>
+                    </button>
+                    <button onClick={() => handleAction('email')} className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-4 rounded-xl flex items-center justify-between transition-colors">
+                      <span className="flex items-center gap-2"><Mail size={20}/> Email Contacts</span>
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <motion.div 
+                    animate={{ rotate: [0, -10, 10, -10, 10, 0] }}
+                    transition={{ duration: 0.5, repeat: Infinity, repeatDelay: 1 }}
+                    className="w-20 h-20 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-6 border border-red-500/30 shadow-[0_0_30px_rgba(239,68,68,0.4)]"
+                  >
+                    <AlertTriangle size={32} className="text-red-400" />
+                  </motion.div>
+                  
+                  <h2 className="text-xl font-bold text-white mb-2">{actionLabel}</h2>
+                  <p className="text-slate-400 text-sm mb-8">{actionDesc}</p>
+                </>
+              )}
               
               <button 
-                onClick={() => setIsCalling(false)}
+                onClick={closeModal}
                 className="w-full bg-slate-800 hover:bg-slate-700 text-white font-medium py-3 px-6 rounded-xl transition-colors border border-slate-700 flex items-center justify-center gap-2"
               >
-                <X size={18} /> Cancel Call
+                <X size={18} /> Cancel & Close
               </button>
             </motion.div>
           </motion.div>

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Wallet, ArrowDownRight, ArrowUpRight, Plus, RefreshCw } from 'lucide-react';
+import { Wallet as WalletIcon, ArrowDownRight, ArrowUpRight, Plus, RefreshCw } from 'lucide-react';
 // import Card from '../Ui/Card';
 // import Button from '../Ui/Button';
 // import Input from '../Ui/Input';
@@ -9,7 +9,7 @@ import { Wallet, ArrowDownRight, ArrowUpRight, Plus, RefreshCw } from 'lucide-re
 // import Card from '../Ui/Card';
 import { useAuth } from '../../Context/AuthContext';
 
-const EscrowWallet = () => {
+const Wallet = () => {
   const { user } = useAuth();
   const [isAddModalOpen, setAddModalOpen] = useState(false);
   const [amount, setAmount] = useState('');
@@ -17,7 +17,7 @@ const EscrowWallet = () => {
   const [toast, setToast] = useState({ show: false, message: '' });
 
   const mockTransactions = [
-    { id: 1, type: 'deduction', amount: 50.00, desc: 'Escrow Lock: Senior Frontend Job', date: 'Today, 2:30 PM' },
+    { id: 1, type: 'deduction', amount: 50.00, desc: 'Wallet Lock: Senior Frontend Job', date: 'Today, 2:30 PM' },
     { id: 2, type: 'addition', amount: 500.00, desc: 'Deposit via Credit Card', date: 'Yesterday, 10:15 AM' },
     { id: 3, type: 'deduction', amount: 120.00, desc: 'Payment Released to John Doe', date: '12 Oct, 4:00 PM' },
   ];
@@ -28,7 +28,7 @@ const EscrowWallet = () => {
     setTimeout(() => {
       setIsLoading(false);
       setAddModalOpen(false);
-      setToast({ show: true, message: `Successfully added ₹${amount} to escrow!` });
+      setToast({ show: true, message: `Successfully added ₹${amount} to wallet!` });
       setAmount('');
     }, 1500);
   };
@@ -36,8 +36,8 @@ const EscrowWallet = () => {
   return (
     <div className="p-4 md:p-8 max-w-5xl mx-auto">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">Escrow Wallet</h1>
-        <p className="text-slate-400">Manage your protected balances and transactions securely.</p>
+        <h1 className="text-3xl font-bold mb-2">Wallet</h1>
+        <p className="text-slate-400">Manage your balances and transactions securely.</p>
       </div>
 
       {/* Main Balance Card */}
@@ -47,7 +47,7 @@ const EscrowWallet = () => {
           
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center relative z-10 gap-6">
             <div>
-              <p className="text-indigo-300 font-medium mb-1">Available Escrow Balance</p>
+              <p className="text-indigo-300 font-medium mb-1">Available Balance</p>
               <h2 className="text-5xl font-bold mb-4 tracking-tight">₹{user?.walletBalance?.toLocaleString()}</h2>
               <div className="flex items-center gap-2 text-sm text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full w-fit">
                 <ArrowUpRight size={16} /> 12% increase from last month
@@ -67,7 +67,7 @@ const EscrowWallet = () => {
       </motion.div>
 
       {/* Transactions */}
-      <h3 className="text-xl font-bold mb-4">Recent Escrow Activity</h3>
+      <h3 className="text-xl font-bold mb-4">Recent Wallet Activity</h3>
       <Card className="p-0 overflow-hidden">
         <div className="divide-y divide-slate-800">
           {mockTransactions.map((tx, i) => (
@@ -96,9 +96,9 @@ const EscrowWallet = () => {
       </Card>
 
       {/* Add Funds Modal */}
-      <Modal isOpen={isAddModalOpen} onClose={() => setAddModalOpen(false)} title="Add Funds to Escrow">
+      <Modal isOpen={isAddModalOpen} onClose={() => setAddModalOpen(false)} title="Add Funds to Wallet">
         <form onSubmit={handleAddFunds} className="space-y-6">
-          <p className="text-sm text-slate-400">Funds added to escrow are securely held until you release them for completed jobs.</p>
+          <p className="text-sm text-slate-400">Funds added to your wallet can be used for new jobs.</p>
           
           <Input 
             label="Amount (₹)" 
@@ -136,4 +136,4 @@ const EscrowWallet = () => {
   );
 };
 
-export default EscrowWallet;
+export default Wallet;

@@ -6,7 +6,7 @@ import Card from './UI/Card';
 import Input from './UI/Input';
 import Button from './UI/Button';
 import FileInput from './UI/FileInput';
-import { Mail, Lock, User as UserIcon, AlertCircle, Briefcase, Award, FileText, Settings, Building, Store } from 'lucide-react';
+import { Mail, Lock, User as UserIcon, AlertCircle, Briefcase, Award, FileText, Settings, Building, Store, Phone } from 'lucide-react';
 import Toast from './UI/Toast';
 
 const Register = () => {
@@ -21,6 +21,8 @@ const Register = () => {
     skills: '',
     businessName: '',
     businessDetails: '',
+    primaryMobile: '',
+    alternateMobile: '',
     role: parsedRole
   });
   
@@ -56,6 +58,16 @@ const Register = () => {
 
     if (formData.password.length < 6) {
       setError('Password must be at least 6 characters.');
+      return;
+    }
+
+    if (!formData.primaryMobile || !formData.alternateMobile) {
+      setError('Both Primary and Alternate mobile numbers are required.');
+      return;
+    }
+
+    if (formData.primaryMobile === formData.alternateMobile) {
+      setError('Primary and Alternate mobile numbers must be different.');
       return;
     }
 
@@ -148,6 +160,26 @@ const Register = () => {
                   placeholder="you@example.com" 
                   icon={Mail} 
                   value={formData.email}
+                  onChange={handleChange}
+                />
+              </div>
+              <div className="grid md:grid-cols-2 gap-5">
+                <Input 
+                  label="Primary Mobile Number"
+                  name="primaryMobile"
+                  type="tel" 
+                  placeholder="10-digit mobile number" 
+                  icon={Phone} 
+                  value={formData.primaryMobile}
+                  onChange={handleChange}
+                />
+                <Input 
+                  label="Emergency/Alternate Mobile" 
+                  name="alternateMobile"
+                  type="tel" 
+                  placeholder="Different 10-digit number" 
+                  icon={Phone} 
+                  value={formData.alternateMobile}
                   onChange={handleChange}
                 />
               </div>

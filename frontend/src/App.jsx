@@ -9,11 +9,12 @@ import Home from './components/Home';
 import ChooseYourPath from './components/ChooseYourPath';
 import Login from './components/Login';
 import Register from './components/Register';
+import ChatBox from './components/UI/ChatBox';
 
 // Job Giver Pages
 import PostJob from './components/JobGiver/PostJob';
 import MyJobs from './components/JobGiver/MyJobs';
-import EscrowWallet from './components/JobGiver/EscrowWallet';
+import Wallet from './components/JobGiver/Wallet';
 import JobHistory from './components/JobGiver/JobHistory';
 import WorkerMap from './components/JobGiver/WorkerMap';
 import EmployerProfile from './components/JobGiver/Profile';
@@ -58,7 +59,7 @@ const App = () => {
           {/* JobGiver (Employer) Routes */}
           <Route path="/giver/dashboard" element={<ProtectedRoute allowedRole="JobGiver"><MyJobs /></ProtectedRoute>} />
           <Route path="/giver/post-job" element={<ProtectedRoute allowedRole="JobGiver"><PostJob /></ProtectedRoute>} />
-          <Route path="/giver/escrow" element={<ProtectedRoute allowedRole="JobGiver"><EscrowWallet /></ProtectedRoute>} />
+          <Route path="/giver/escrow" element={<ProtectedRoute allowedRole="JobGiver"><Wallet /></ProtectedRoute>} />
           <Route path="/giver/job-history" element={<ProtectedRoute allowedRole="JobGiver"><JobHistory /></ProtectedRoute>} />
           <Route path="/giver/map" element={<ProtectedRoute allowedRole="JobGiver"><WorkerMap /></ProtectedRoute>} />
           <Route path="/giver/profile" element={<ProtectedRoute allowedRole="JobGiver"><EmployerProfile /></ProtectedRoute>} />
@@ -71,6 +72,7 @@ const App = () => {
           <Route path="/worker/active" element={<ProtectedRoute allowedRole="Worker"><ActiveJob /></ProtectedRoute>} />
           <Route path="/worker/profile" element={<ProtectedRoute allowedRole="Worker"><WorkerProfile /></ProtectedRoute>} />
         </Routes>
+        {user && <ChatBox />}
       </main>
     </div>
   );

@@ -5,16 +5,18 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Briefcase, User, LogOut, Bell, CheckCircle } from 'lucide-react';
 import Button from './UI/Button';
 
-const MOCK_NOTIFICATIONS = [
-  { id: 1, text: 'New worker applied to your job', time: '10m ago', unread: true },
-  { id: 2, text: 'Job "Senior Dev" accepted', time: '1h ago', unread: true },
-  { id: 3, text: 'Payment successful for milestone 1', time: '2d ago', unread: false },
+const INITIAL_NOTIFICATIONS = [
+  { id: 1, text: 'New worker available nearby', time: 'Just now', unread: true },
+  { id: 2, text: 'New job available: Plumber', time: '10m ago', unread: true },
+  { id: 3, text: 'Job "Senior Dev" accepted', time: '1h ago', unread: true },
+  { id: 4, text: 'Payment received for milestone 1', time: '2d ago', unread: false },
 ];
 
 const Navbar = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [showNotifications, setShowNotifications] = useState(false);
+  const [notifications, setNotifications] = useState(INITIAL_NOTIFICATIONS);
   const dropdownRef = useRef(null);
 
   const handleLogout = () => {
@@ -32,7 +34,11 @@ const Navbar = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const unreadCount = MOCK_NOTIFICATIONS.filter(n => n.unread).length;
+  const unreadCount = notifications.filter(n => n.unread).length;
+
+  const markAllAsRead = () => {
+    setNotifications(notifications.map(n => ({ ...n, unread: false })));
+  };
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-slate-950/80 backdrop-blur-md border-b border-slate-800">
@@ -101,9 +107,9 @@ const Navbar = () => {
                           <span className="text-xs font-medium text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded-full">{unreadCount} new</span>
                         </div>
                         <div className="max-h-80 overflow-y-auto">
-                          {MOCK_NOTIFICATIONS.length > 0 ? (
-                            MOCK_NOTIFICATIONS.map((notif) => (
-                              <div key={notif.id} className={`px-4 py-3 border-b border-slate-800/30 hover:bg-slate-800/50 transition-colors cursor-pointer flex gap-3 ${notif.unread ? 'bg-indigo-500/5' : ''}`}>
+                          {notifications.length > 0 ? (
+                            notifications.map((notif) => (
+                              <div key={notif.id} className={`px-4 py-3 border-b border-slate-800/30 hover:bg-slate-800/50 transition-colors flex gap-3 ${notif.unread ? 'bg-indigo-500/5' : ''}`}>
                                 <div className="mt-1 flex-shrink-0">
                                   {notif.unread ? <div className="w-2 h-2 bg-indigo-500 rounded-full mt-1.5"></div> : <CheckCircle size={14} className="text-slate-500 mt-0.5" />}
                                 </div>
@@ -119,7 +125,10 @@ const Navbar = () => {
                             </div>
                           )}
                         </div>
-                        <div className="px-4 py-2 border-t border-slate-800/60 text-center bg-slate-900/50 hover:bg-slate-800 transition-colors cursor-pointer">
+                        <div 
+                          onClick={markAllAsRead}
+                          className="px-4 py-2 border-t border-slate-800/60 text-center bg-slate-900/50 hover:bg-slate-800 transition-colors cursor-pointer"
+                        >
                           <span className="text-xs font-medium text-indigo-400">Mark all as read</span>
                         </div>
                       </motion.div>

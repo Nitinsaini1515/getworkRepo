@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { Briefcase, IndianRupee, Clock, CheckCircle } from 'lucide-react';
 import Card from '../UI/Card';
 import Button from '../UI/Button';
+import SOSButton from '../UI/SOSButton';
 import { useAuth } from './../../Context/AuthContext';
 
 const WorkerDashboard = () => {
@@ -16,9 +17,12 @@ const WorkerDashboard = () => {
           <h1 className="text-3xl font-bold mb-1">Welcome back, {user?.name?.split(' ')[0]}</h1>
           <p className="text-slate-400">Here's what's happening with your jobs today.</p>
         </div>
-        <Link to="/worker/jobs">
-          <Button><Briefcase size={18} /> Find Work</Button>
-        </Link>
+        <div className="flex items-center gap-3">
+          <SOSButton />
+          <Link to="/worker/jobs">
+            <Button><Briefcase size={18} /> Find Work</Button>
+          </Link>
+        </div>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mb-8">
@@ -69,7 +73,7 @@ const WorkerDashboard = () => {
                 </div>
                 <div className="text-right">
                   <p className="font-bold text-xl">₹400/hr</p>
-                  <p className="text-slate-400 text-xs">Escrow Secured</p>
+                  <p className="text-slate-400 text-xs">Payment Secured</p>
                 </div>
               </div>
               <Link to="/worker/active" className="block outline-none">

@@ -1,14 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Scan, Timer, MapPin, CheckCircle, Navigation } from 'lucide-react';
-import Card from '../UI/Card.jsx';
-import Button from '../UI/Button.jsx';
-import Toast from '../UI/Toast.jsx';
+import Card from '../UI/Card';
+import Button from '../UI/Button';
+import FileInput from '../UI/FileInput';
+import Toast from '../UI/Toast';
+import FeedbackModal from '../UI/FeedbackModal';
 
 const ActiveJob = () => {
-  const [step, setStep] = useState(1); // 1: Navigate, 2: Scan QR, 3: Working, 4: Finished
+  const [step, setStep] = useState(1); // 1: Navigate, 2: Scan QR, 3: Working, 4: Upload Proof, 5: Pending, 6: Finished
   const [time, setTime] = useState(0);
+  const [proofImage, setProofImage] = useState(null);
   const [toast, setToast] = useState({ show: false, message: '' });
+  const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
 
   // Timer simulation
   useEffect(() => {
@@ -35,7 +39,21 @@ const ActiveJob = () => {
 
   const handleEndJob = () => {
     setStep(4);
-    setToast({ show: true, message: 'Job completed! Payment transferred to wallet.' });
+  };
+
+  const handleUploadProof = () => {
+    if (!proofImage) {
+      setToast({ show: true, message: 'Please upload a proof of work image first.' });
+      return;
+    }
+    setStep(5);
+    setToast({ show: true, message: 'Proof uploaded. Pending employer approval...' });
+    
+    // Simulate employer approval delay
+    setTimeout(() => {
+      setStep(6);
+      setToast({ show: true, message: 'Job Approved! Payment transferred to wallet.' });
+    }, 4000);
   };
 
   return (
@@ -94,13 +112,43 @@ const ActiveJob = () => {
 
             {step === 4 && (
               <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}>
+                <div className="w-24 h-24 bg-indigo-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <CheckCircle className="text-indigo-400 w-12 h-12" />
+                </div>
+                <h3 className="text-2xl font-bold mb-2">Upload Proof of Work</h3>
+                <p className="text-slate-300 mb-6 text-sm">Please upload an image showing the completed work for employer verification.</p>
+                <div className="mb-6 text-left">
+                  <FileInput 
+                    label="Upload Image (JPG, PNG)"
+                    accept="image/*"
+                    onChange={(file) => setProofImage(file)}
+                  />
+                  {proofImage && <p className="text-xs text-emerald-400 mt-2 text-center">Image attached successfully.</p>}
+                </div>
+                <Button className="w-full" onClick={handleUploadProof}>Submit for Approval</Button>
+              </motion.div>
+            )}
+
+            {step === 5 && (
+              <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}>
+                <div className="w-24 h-24 bg-orange-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <Timer className="text-orange-400 w-12 h-12 animate-pulse" />
+                </div>
+                <h3 className="text-2xl font-bold mb-2 text-orange-400">Pending Approval</h3>
+                <p className="text-slate-300 mb-2">Waiting for the employer to verify your work.</p>
+                <p className="text-slate-400 text-sm mb-8">This usually takes a few minutes. You will be notified once approved.</p>
+              </motion.div>
+            )}
+
+            {step === 6 && (
+              <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}>
                 <div className="w-24 h-24 bg-emerald-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
                   <CheckCircle className="text-emerald-400 w-12 h-12" />
                 </div>
                 <h3 className="text-2xl font-bold mb-2 text-emerald-400">Job Complete!</h3>
                 <p className="text-slate-300 mb-2">Total Time: <span className="font-bold">{formatTime(time)}</span></p>
                 <p className="text-slate-300 mb-8">Amount Transferred: <span className="font-bold text-emerald-400">₹{((time / 3600) * 400).toFixed(2)}</span></p>
-                <Button className="w-full">Rate Employer</Button>
+                <Button className="w-full text-indigo-100 border border-indigo-500/50 hover:bg-slate-800" onClick={() => setIsFeedbackOpen(true)}>Review Employer</Button>
               </motion.div>
             )}
           </div>
@@ -131,6 +179,12 @@ const ActiveJob = () => {
           </Card>
         </div>
       </div>
+
+      <FeedbackModal 
+        isOpen={isFeedbackOpen} 
+        onClose={() => setIsFeedbackOpen(false)} 
+        targetName="Logistics Inc."
+      />
 
       <Toast message={toast.message} isVisible={toast.show} onClose={() => setToast({show: false, message: ''})} type="success" />
     </div>

@@ -2,7 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { User, Briefcase } from 'lucide-react';
-import Card from '../Ui/Card';
+import Card from './UI/Card';
 
 const ChooseYourPath = () => {
   return (

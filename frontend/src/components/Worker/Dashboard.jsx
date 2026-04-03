@@ -2,9 +2,9 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { Briefcase, IndianRupee, Clock, CheckCircle } from 'lucide-react';
-import Card from './Ui/Card';
-import Button from './Ui/Button';
-import { useAuth } from './../context/AuthContext';
+import Card from '../UI/Card';
+import Button from '../UI/Button';
+import { useAuth } from './../../Context/AuthContext';
 
 const WorkerDashboard = () => {
   const { user } = useAuth();

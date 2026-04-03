@@ -1,9 +1,10 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import Button from '../Ui/Button';
+// import Button from './UI/Button';
+import Button from './UI/Button';
 import { ArrowRight, Briefcase, Zap, ShieldCheck } from 'lucide-react';
-import Card from '../Ui/Card';
+import Card from './UI/Card';
 
 const Home = () => {
   return (

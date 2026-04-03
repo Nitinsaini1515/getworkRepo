@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '.../context/AuthContext';
-import Card from '../Ui/Card';
-import Input from '../Ui/Input';
-import Button from '../Ui/Button';
+import { useAuth } from '../Context/AuthContext';
+import Card from './UI/Card';
+import Input from './UI/Input';
+import Button from './UI/Button';
 import { Mail, Lock, AlertCircle } from 'lucide-react';
-import Toast from '../Ui/Toast';
+import Toast from './UI/Toast';
 
 const Login = () => {
   const [email, setEmail] = useState('');

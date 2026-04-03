@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import Card from '../Ui/Card';
-import Input from '../Ui/Input';
-import Button from '../Ui/Button';
-import Toast from '../Ui/Toast';
+import Card from '../UI/Card';
+import Input from '../UI/Input';
+import Button from '../UI/Button';
+// import Toast from '../UI/Toast';
+import Toast from '../UI/Toast';
 import { Briefcase, MapPin, DollarSign, Calendar as CalendarIcon, Zap, CheckCircle2 } from 'lucide-react';
 
 const PostJob = () => {

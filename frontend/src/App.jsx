@@ -1,7 +1,9 @@
 import React from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
+// import { useAuth } from './Context/AuthContext';
 import { useAuth } from './Context/AuthContext';
 import Navbar from './components/Navbar';
+// import Sidebar from './components/UI/Sidebar';
 import Sidebar from './components/Ui/Sidebar';
 import Home from './components/Home';
 import ChooseYourPath from './components/ChooseYourPath';
@@ -21,7 +23,7 @@ import JobList from './components/Worker/JobList';
 import WorkerDashboard from './components/Worker/Dashboard';
 import WorkerWallet from './components/Worker/Wallet';
 import WorkerHistory from './components/Worker/JobHistory';
-import ActiveJob from './components/Worker/ActiveJob';
+import ActiveJob from './components/Worker/ActiveJobs';
 import WorkerProfile from './components/Worker/Profile';
 
 // Protected Route Component

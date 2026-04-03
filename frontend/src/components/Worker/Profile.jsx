@@ -1,10 +1,11 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { MapPin, User, Mail, Shield, CheckCircle } from 'lucide-react';
-import Card from './Ui/Card';
-import Input from './Ui/Input';
-import Button from './Ui/Button';
-import { useAuth } from './../context/AuthContext';
+// import Card from './Ui/Card';
+import Card from '../UI/Card';
+import Input from '../UI/Input';
+import Button from '../UI/Button';
+import { useAuth } from './../../Context/AuthContext';
 
 const WorkerProfile = () => {
   const { user } = useAuth();

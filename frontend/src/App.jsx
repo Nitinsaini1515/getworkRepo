@@ -9,6 +9,7 @@ import Home from './components/Home';
 import ChooseYourPath from './components/ChooseYourPath';
 import Login from './components/Login';
 import Register from './components/Register';
+import About from './components/About';
 import ChatBox from './components/UI/ChatBox';
 
 // Job Giver Pages
@@ -58,7 +59,7 @@ const App = () => {
           <Route path="/choose-path" element={<ChooseYourPath />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register/:role" element={<Register />} />
-          <Route path="/about" element={<div className="pt-24 text-center">About GetWork V2...</div>} />
+          <Route path="/about" element={<About />} />
 
           {/* Alias Routes */}
           <Route path="/dashboard" element={<ProtectedRoute>{user?.role === 'Worker' ? <Navigate to="/worker/dashboard" replace /> : <Navigate to="/giver/dashboard" replace />}</ProtectedRoute>} />

@@ -1,10 +1,15 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { LayoutDashboard, Clock, CheckCircle, Search, Filter } from 'lucide-react';
-import Card from '../Ui/Card';
-import Input from '../Ui/Input';
-import Button from '../Ui/Button';
+// import Card from '../Ui/Card';
+// import {Input} from '../Ui/Input';
+// import Button from './Ui/Button';
+// import Card from '../Ui/Card';
+// import Button from '../Ui/Button';
 
+import Button from '../UI/Button';
+import Card from '../UI/Card';
+import Input from '../UI/Input';
 const MOCK_HISTORY = [
   { id: 1, title: 'Senior Frontend Engineer', date: 'Oct 15, 2026', worker: 'John Doe', status: 'Active', amount: '₹12,000' },
   { id: 2, title: 'UI/UX Designer', date: 'Sep 22, 2026', worker: 'Jane Smith', status: 'Completed', amount: '₹4,500' },

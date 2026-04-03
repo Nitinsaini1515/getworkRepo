@@ -1,12 +1,17 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Wallet as WalletIcon, ArrowDownRight, ArrowUpRight, CheckCircle } from 'lucide-react';
-import Card from '../Ui/Card';
-import Button from '../Ui/Button';
-import Modal from '../Ui/Modal';
-import Toast from '../Ui/Toast';
-import { useAuth } from '../../context/AuthContext';
-
+// import Card from '../Ui/Card';
+// import Button from '../Ui/Button';
+// import Modal from '../Ui/Modal';
+// import Toast from '../Ui/Toast';
+// import { useAuth } from '../../context/AuthContext';
+import Card from '../UI/Card';
+import Button from '../UI/Button';
+import Modal from '../UI/Modal';
+import Toast from '../UI/Toast';
+// import {useAuth} from "../../context/AuthContext"
+import { useAuth } from '../../Context/AuthContext';
 const Wallet = () => {
   const { user } = useAuth();
   const [isWithdrawOpen, setWithdrawOpen] = useState(false);

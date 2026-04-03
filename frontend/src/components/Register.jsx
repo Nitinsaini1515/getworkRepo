@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate, useParams, Link } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import Card from './Ui/Card';
-import Input from './Ui/Input';
-import Button from './Ui/Button';
+import { useAuth } from '.../context/AuthContext';
+import Card from '../Ui/Card';
+import Input from '../Ui/Input';
+import Button from '../Ui/Button';
 import { Mail, Lock, User as UserIcon, AlertCircle } from 'lucide-react';
-import Toast from './Ui/Toast';
+import Toast from '../Ui/Toast';
 
 const Register = () => {
   const { role } = useParams();

@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Search, MapPin, DollarSign, Clock, Filter, Briefcase } from 'lucide-react';
-import Card from '../Ui/Card';
-import Input from '../Ui/Input';
-import Button from '../Ui/Button';
+import Card from './Ui/Card';
+import Input from './Ui/Input';
+import Button from './Ui/Button';
 
 // Mock Data
 const MOCK_JOBS = [

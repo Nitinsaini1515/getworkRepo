@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Scan, Timer, MapPin, CheckCircle, Navigation } from 'lucide-react';
-import Card from '../Ui/Card';
-import Button from '../Ui/Button';
-import Toast from '../Ui/Toast';
+import Card from './Ui/Card.jsx';
+import Button from './Ui/Button.jsx';
+import Toast from './Ui/Toast.jsx';
 
 const ActiveJob = () => {
   const [step, setStep] = useState(1); // 1: Navigate, 2: Scan QR, 3: Working, 4: Finished

@@ -16,6 +16,7 @@ const userSchema = new mongoose.Schema(
     },
 
     qualification: { type: String, trim: true, default: "" },
+    location: { type: String, trim: true, default: "" },
     skills: [{ type: String, trim: true }],
     primaryMobile: { type: String, trim: true, default: "" },
     alternateMobile: { type: String, trim: true, default: "" },

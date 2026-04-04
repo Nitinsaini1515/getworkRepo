@@ -42,7 +42,12 @@ export async function completeJob(jobId, files) {
     if (f) form.append("photos", f);
   }
   const { data } = await api.post(`/jobs/complete/${jobId}`, form, {
-    headers: { "Content-Type": "multipart/form-data" },
+    transformRequest: [
+      (body, headers) => {
+        delete headers["Content-Type"];
+        return body;
+      },
+    ],
   });
   return data.data.job;
 }

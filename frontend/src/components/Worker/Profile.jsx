@@ -1,22 +1,51 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
 import { MapPin, User, Mail, Shield, CheckCircle } from 'lucide-react';
 import Card from '../UI/Card';
 import Input from '../UI/Input';
 import Button from '../UI/Button';
 import Toast from '../UI/Toast';
 import { useAuth } from '../../Context/AuthContext';
-import { updateWorkerAvailability } from '../../services/workersService.js';
+import { updateWorkerAvailability, updateWorkerProfile } from '../../services/workersService.js';
 import { getApiErrorMessage } from '../../utils/getApiErrorMessage.js';
 
 const WorkerProfile = () => {
   const { user, refreshUser } = useAuth();
   const [isAvailable, setIsAvailable] = useState(!!user?.isAvailable);
+  const [name, setName] = useState(user?.name || '');
+  const [location, setLocation] = useState(user?.location || '');
+  const [skillsInput, setSkillsInput] = useState(
+    Array.isArray(user?.skills) ? user.skills.join(', ') : ''
+  );
+  const [savingProfile, setSavingProfile] = useState(false);
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
 
   useEffect(() => {
     setIsAvailable(!!user?.isAvailable);
   }, [user?.isAvailable]);
+
+  useEffect(() => {
+    if (!user) return;
+    setName(user.name || '');
+    setLocation(user.location || '');
+    setSkillsInput(Array.isArray(user.skills) ? user.skills.join(', ') : '');
+  }, [user]);
+
+  const saveProfile = async () => {
+    setSavingProfile(true);
+    try {
+      const skills = skillsInput
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean);
+      await updateWorkerProfile({ name, location, skills });
+      await refreshUser();
+      setToast({ show: true, type: 'success', message: 'Profile saved.' });
+    } catch (e) {
+      setToast({ show: true, type: 'error', message: getApiErrorMessage(e) });
+    } finally {
+      setSavingProfile(false);
+    }
+  };
 
   const toggleAvailability = async () => {
     const next = !isAvailable;
@@ -45,28 +74,49 @@ const WorkerProfile = () => {
           <Card>
             <h2 className="text-xl font-bold mb-4 flex items-center gap-2"><User size={20} className="text-indigo-400" /> Personal Details</h2>
             <div className="space-y-4">
-              <Input label="Full Name" defaultValue={user?.name || ''} />
-              <Input label="Email Address" defaultValue={user?.email || ''} icon={Mail} />
-              <Input label="Location (City, Area)" placeholder="e.g. Bandra, Mumbai" icon={MapPin} />
-              <Button>Save Profile</Button>
+              <Input
+                label="Full Name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+              />
+              <Input label="Email Address" value={user?.email || ''} readOnly icon={Mail} />
+              <Input
+                label="Location (City, Area)"
+                placeholder="e.g. Bandra, Mumbai"
+                icon={MapPin}
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+              />
+              <Input
+                label="Skills (comma-separated)"
+                placeholder="Delivery, Plumbing, Driving"
+                value={skillsInput}
+                onChange={(e) => setSkillsInput(e.target.value)}
+              />
+              <Button onClick={saveProfile} disabled={savingProfile}>
+                {savingProfile ? 'Saving…' : 'Save Profile'}
+              </Button>
             </div>
           </Card>
 
           <Card>
             <h2 className="text-xl font-bold mb-4 flex items-center gap-2"><Shield size={20} className="text-indigo-400" /> Professional Skills</h2>
-            <p className="text-sm text-slate-400 mb-4">Add your skills to get matched with the right jobs automatically.</p>
-            
-            <div className="flex flex-wrap gap-2 mb-6">
-              {['Delivery', 'Event Management', 'Warehouse', 'Plumbing', 'Driving'].map(skill => (
-                <div key={skill} className="bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 px-3 py-1.5 rounded-full text-sm cursor-pointer hover:bg-indigo-500/20 transition-colors">
-                  {skill} ✕
-                </div>
-              ))}
-            </div>
-
-            <div className="flex gap-4">
-              <Input placeholder="Add a new skill (e.g. Accounting)" className="flex-1" />
-              <Button variant="secondary">Add</Button>
+            <p className="text-sm text-slate-400 mb-4">
+              Edit the comma-separated skills field under Personal Details and click Save Profile. Your saved skills appear below.
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {(Array.isArray(user?.skills) ? user.skills : []).length ? (
+                user.skills.map((skill) => (
+                  <span
+                    key={skill}
+                    className="bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 px-3 py-1.5 rounded-full text-sm"
+                  >
+                    {skill}
+                  </span>
+                ))
+              ) : (
+                <p className="text-sm text-slate-500">No skills saved yet.</p>
+              )}
             </div>
           </Card>
         </div>
@@ -76,13 +126,9 @@ const WorkerProfile = () => {
             <div className="w-24 h-24 bg-slate-800 rounded-full mx-auto mb-4 border-4 border-indigo-500 flex items-center justify-center text-4xl font-bold text-indigo-400 relative">
               {user?.name?.charAt(0) || 'U'}
               {isAvailable && (
-                <motion.span 
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  className="absolute bottom-1 right-1 w-5 h-5 bg-emerald-500 border-2 border-slate-900 rounded-full flex items-center justify-center"
-                >
-                  <span className="w-full h-full bg-emerald-400 rounded-full animate-ping absolute opacity-50"></span>
-                </motion.span>
+                <span className="absolute bottom-1 right-1 w-5 h-5 bg-emerald-500 border-2 border-slate-900 rounded-full flex items-center justify-center">
+                  <span className="w-full h-full bg-emerald-400 rounded-full animate-ping absolute opacity-50" />
+                </span>
               )}
             </div>
             <h3 className="font-bold text-lg mb-1">{user?.name}</h3>

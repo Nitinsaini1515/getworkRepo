@@ -11,5 +11,11 @@ router.get(
   workerController.listAvailableWorkers
 );
 router.patch("/availability", protect, requireRole("Worker"), workerController.setAvailability);
+router.patch(
+  "/profile",
+  protect,
+  requireRole("Worker"),
+  workerController.updateWorkerProfile
+);
 
 export default router;

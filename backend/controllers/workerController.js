@@ -1,7 +1,23 @@
 import { User } from "../models/User.js";
 import { ApiError } from "../utils/ApiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
-import { serializeUser } from "../utils/userSerializer.js";
+import {
+  serializeUser,
+  getUserJobContext,
+} from "../utils/userSerializer.js";
+
+function parseSkills(skills) {
+  if (Array.isArray(skills)) {
+    return skills.map((s) => String(s).trim()).filter(Boolean);
+  }
+  if (typeof skills === "string") {
+    return skills
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
+  }
+  return [];
+}
 
 /** Dummy markers for map — anchored to query lat/lng */
 export const nearbyWorkers = asyncHandler(async (req, res) => {
@@ -56,18 +72,53 @@ export const setAvailability = asyncHandler(async (req, res) => {
     throw new ApiError(403, "Only workers can update availability");
   }
 
-  const { isAvailable } = req.body;
-  if (typeof isAvailable !== "boolean") {
+  const raw = req.body?.isAvailable;
+  let isAvailable;
+  if (raw === true || raw === "true") isAvailable = true;
+  else if (raw === false || raw === "false") isAvailable = false;
+  else {
     throw new ApiError(400, "isAvailable must be a boolean");
   }
 
   const user = await User.findById(req.userId);
   user.isAvailable = isAvailable;
   await user.save();
+  const ctx = await getUserJobContext(user._id, user.role);
 
   res.json({
     success: true,
     message: "Availability updated",
-    data: { user: serializeUser(user) },
+    data: { user: { ...serializeUser(user), ...ctx } },
+  });
+});
+
+export const updateWorkerProfile = asyncHandler(async (req, res) => {
+  if (req.user.role !== "Worker") {
+    throw new ApiError(403, "Only workers can update this profile");
+  }
+
+  const { name, location, qualification, skills } = req.body ?? {};
+  const user = await User.findById(req.userId);
+
+  if (typeof name === "string" && name.trim()) {
+    user.name = name.trim();
+  }
+  if (typeof location === "string") {
+    user.location = location.trim();
+  }
+  if (typeof qualification === "string") {
+    user.qualification = qualification.trim();
+  }
+  if (skills !== undefined) {
+    user.skills = parseSkills(skills);
+  }
+
+  await user.save();
+  const ctx = await getUserJobContext(user._id, user.role);
+
+  res.json({
+    success: true,
+    message: "Profile updated",
+    data: { user: { ...serializeUser(user), ...ctx } },
   });
 });

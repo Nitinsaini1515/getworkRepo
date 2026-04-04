@@ -17,3 +17,8 @@ export async function updateWorkerAvailability(isAvailable) {
   const { data } = await api.patch("/worker/availability", { isAvailable });
   return data.data.user;
 }
+
+export async function updateWorkerProfile(body) {
+  const { data } = await api.patch("/worker/profile", body);
+  return data.data.user;
+}

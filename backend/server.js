@@ -20,30 +20,85 @@ const app = express();
 
 app.set("trust proxy", 1);
 
-const corsOrigins = process.env.CORS_ORIGIN
-  ? process.env.CORS_ORIGIN.split(",").map((s) => s.trim())
-  : null;
+function parseAllowedOrigins() {
+  const raw = [process.env.CORS_ORIGIN, process.env.FRONTEND_URL]
+    .filter(Boolean)
+    .join(",");
+  const list = raw
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+  return [...new Set(list)];
+}
+
+const corsAllowedList = parseAllowedOrigins();
+const allowVercelPreviews =
+  process.env.CORS_ALLOW_VERCEL === "1" ||
+  process.env.CORS_ALLOW_VERCEL === "true";
+
+function isVercelPreviewOrigin(origin) {
+  try {
+    const u = new URL(origin);
+    return u.protocol === "https:" && u.hostname.endsWith(".vercel.app");
+  } catch {
+    return false;
+  }
+}
 
 app.use(
   cors({
-    origin: corsOrigins?.length
-      ? (origin, cb) => {
-          if (!origin || corsOrigins.includes(origin)) {
-            cb(null, true);
-          } else {
-            cb(null, false);
-          }
-        }
-      : true,
+    origin(origin, callback) {
+      if (!origin) {
+        return callback(null, true);
+      }
+      if (corsAllowedList.length === 0) {
+        console.warn(
+          "[GetWork CORS] No CORS_ORIGIN or FRONTEND_URL set — reflecting request Origin (set explicit origins in production)."
+        );
+        return callback(null, true);
+      }
+      if (corsAllowedList.includes(origin)) {
+        return callback(null, true);
+      }
+      if (allowVercelPreviews && isVercelPreviewOrigin(origin)) {
+        return callback(null, true);
+      }
+      console.warn(`[GetWork CORS] Blocked origin: ${origin}`);
+      return callback(null, false);
+    },
     credentials: true,
+    methods: ["GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
+    optionsSuccessStatus: 204,
   })
 );
+
+if (corsAllowedList.length) {
+  console.log("[GetWork CORS] Allowed origins:", corsAllowedList.join(", "));
+}
+if (allowVercelPreviews) {
+  console.log("[GetWork CORS] Also allowing https://*.vercel.app (CORS_ALLOW_VERCEL)");
+}
+
 app.use(express.json({ limit: "2mb" }));
+app.use(express.urlencoded({ extended: true, limit: "2mb" }));
 
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 app.get("/health", (req, res) => {
   res.status(200).json({ success: true, service: "GetWork API", status: "ok" });
+});
+
+app.use((req, res, next) => {
+  const started = Date.now();
+  res.on("finish", () => {
+    if (res.statusCode >= 400) {
+      console.warn(
+        `[GetWork API] ${res.statusCode} ${req.method} ${req.originalUrl} (${Date.now() - started}ms)`
+      );
+    }
+  });
+  next();
 });
 
 app.use("/api/auth", authRoutes);

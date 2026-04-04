@@ -16,10 +16,11 @@ async function refreshUserRating(toUserId) {
 }
 
 export const submitFeedback = asyncHandler(async (req, res) => {
-  const { toUser, rating, comment, jobId } = req.body;
+  const toUser = req.body.toUser ?? req.body.toUserId;
+  const { rating, comment, jobId } = req.body;
 
   if (!toUser || !mongoose.isValidObjectId(toUser)) {
-    throw new ApiError(400, "toUser is required");
+    throw new ApiError(400, "toUser or toUserId is required");
   }
   const r = Number(rating);
   if (Number.isNaN(r) || r < 1 || r > 5) {

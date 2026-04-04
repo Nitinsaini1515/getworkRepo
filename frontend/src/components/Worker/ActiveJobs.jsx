@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { Scan, Timer, MapPin, CheckCircle, Navigation } from 'lucide-react';
+import { Scan, MapPin, CheckCircle, Navigation } from 'lucide-react';
 import Card from '../UI/Card';
 import Button from '../UI/Button';
 import FileInput from '../UI/FileInput';
 import Toast from '../UI/Toast';
 import FeedbackModal from '../UI/FeedbackModal';
 import { useAuth } from '../../Context/AuthContext';
-import { fetchJobs, uploadJobProof, fetchJobById } from '../../services/jobsService.js';
+import { fetchJobs, startJob, completeJob } from '../../services/jobsService.js';
 import { submitFeedback } from '../../services/feedbackService.js';
 import { getApiErrorMessage } from '../../utils/getApiErrorMessage.js';
 
@@ -52,10 +52,10 @@ const ActiveJob = () => {
       const mine = jobs.find(
         (j) =>
           workerRef(j) === String(user.id) &&
-          ['accepted', 'pending'].includes(j.status)
+          ['applied', 'in-progress'].includes(j.status)
       );
       setActiveJob(mine || null);
-      if (mine?.status === 'pending') setStep(5);
+      if (mine?.status === 'in-progress') setStep(3);
     } catch {
       setActiveJob(null);
     }
@@ -73,25 +73,6 @@ const ActiveJob = () => {
     return () => clearInterval(interval);
   }, [step]);
 
-  useEffect(() => {
-    if (step !== 5 || !activeJob) return;
-    const id = activeJob.id || activeJob._id;
-    const iv = setInterval(async () => {
-      try {
-        const j = await fetchJobById(id);
-        if (j.status === 'completed') {
-          setStep(6);
-          await refreshUser();
-          setToast({ show: true, message: 'Job approved! Payment transferred.', type: 'success' });
-          clearInterval(iv);
-        }
-      } catch {
-        /* ignore */
-      }
-    }, 5000);
-    return () => clearInterval(iv);
-  }, [step, activeJob, refreshUser]);
-
   const formatTime = (totalSeconds) => {
     const hours = Math.floor(totalSeconds / 3600);
     const minutes = Math.floor((totalSeconds % 3600) / 60);
@@ -107,9 +88,17 @@ const ActiveJob = () => {
     ? Number(activeJob.escrowAmount).toFixed(2)
     : (hoursEst * payRate).toFixed(2);
 
-  const handleScan = () => {
-    setToast({ show: true, message: 'QR Code Scanned Successfully! Timer Started.', type: 'success' });
-    setStep(3);
+  const handleScan = async () => {
+    if (!activeJob) return;
+    const id = activeJob.id || activeJob._id;
+    try {
+      await startJob(id);
+      await refreshUser();
+      setToast({ show: true, message: 'QR Code scanned. Job started — timer running.', type: 'success' });
+      setStep(3);
+    } catch (e) {
+      setToast({ show: true, message: getApiErrorMessage(e), type: 'error' });
+    }
   };
 
   const handleEndJob = () => {
@@ -123,11 +112,11 @@ const ActiveJob = () => {
     }
     try {
       const id = activeJob.id || activeJob._id;
-      await uploadJobProof(id, proofImage);
+      const updated = await completeJob(id, [proofImage]);
+      setActiveJob(updated);
       await refreshUser();
-      await loadJob();
-      setStep(5);
-      setToast({ show: true, message: 'Proof uploaded. Pending employer approval...', type: 'success' });
+      setStep(6);
+      setToast({ show: true, message: 'Job completed. Payment released to your wallet.', type: 'success' });
     } catch (e) {
       setToast({ show: true, message: getApiErrorMessage(e), type: 'error' });
     }
@@ -222,18 +211,7 @@ const ActiveJob = () => {
                   />
                   {proofImage && <p className="text-xs text-emerald-400 mt-2 text-center">Image attached successfully.</p>}
                 </div>
-                <Button className="w-full" onClick={handleUploadProof}>Submit for Approval</Button>
-              </motion.div>
-            )}
-
-            {step === 5 && (
-              <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}>
-                <div className="w-24 h-24 bg-orange-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <Timer className="text-orange-400 w-12 h-12 animate-pulse" />
-                </div>
-                <h3 className="text-2xl font-bold mb-2 text-orange-400">Pending Approval</h3>
-                <p className="text-slate-300 mb-2">Waiting for the employer to verify your work.</p>
-                <p className="text-slate-400 text-sm mb-8">This usually takes a few minutes. You will be notified once approved.</p>
+                <Button className="w-full" onClick={handleUploadProof}>Submit &amp; complete job</Button>
               </motion.div>
             )}
 

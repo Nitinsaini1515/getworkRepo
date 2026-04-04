@@ -8,6 +8,8 @@ const applicantSchema = new mongoose.Schema(
   { _id: false }
 );
 
+const JOB_STATUSES = ["open", "applied", "in-progress", "completed"];
+
 const jobSchema = new mongoose.Schema(
   {
     title: { type: String, required: true, trim: true },
@@ -23,22 +25,34 @@ const jobSchema = new mongoose.Schema(
 
     status: {
       type: String,
-      enum: ["open", "applied", "accepted", "pending", "completed"],
+      enum: JOB_STATUSES,
       default: "open",
     },
+
+    /** Set when worker scans QR / starts the job on-site */
+    startTime: { type: Date, default: null },
 
     scheduledAt: { type: Date, default: null },
     experience: { type: String, default: "" },
     tier: { type: String, default: "Standard" },
 
-    /** Locked payout amount for the worker (pay × parsed hours). */
     escrowAmount: { type: Number, default: 0, min: 0 },
+    /** @deprecated prefer completionPhotos — kept for older clients */
     proofImageUrl: { type: String, default: "" },
+    completionPhotos: [{ type: String, trim: true }],
+
+    /** Employer notified after worker marks job complete */
+    employerNotifiedAt: { type: Date, default: null },
+
+    /** Escrow released to worker (mirrors payment completion) */
+    paymentReleasedAt: { type: Date, default: null },
   },
   { timestamps: true }
 );
 
 jobSchema.index({ employer: 1, status: 1 });
 jobSchema.index({ worker: 1 });
+jobSchema.index({ status: 1 });
+jobSchema.index({ "applicants.user": 1 });
 
 export const Job = mongoose.models.Job || mongoose.model("Job", jobSchema);

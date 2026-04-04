@@ -22,7 +22,7 @@ function workerId(job) {
 function findChatJob(jobs, uid) {
   const id = String(uid);
   for (const j of jobs) {
-    if (!['applied', 'accepted', 'pending', 'completed'].includes(j.status)) continue;
+    if (!['applied', 'in-progress', 'completed'].includes(j.status)) continue;
     const eid = employerId(j);
     const wid = workerId(j);
     const isApplicant = j.applicants?.some(

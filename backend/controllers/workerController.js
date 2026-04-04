@@ -3,6 +3,29 @@ import { ApiError } from "../utils/ApiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { serializeUser } from "../utils/userSerializer.js";
 
+/** Dummy markers for map — anchored to query lat/lng */
+export const nearbyWorkers = asyncHandler(async (req, res) => {
+  const lat = parseFloat(req.query.lat);
+  const lng = parseFloat(req.query.lng);
+  const baseLat = Number.isFinite(lat) ? lat : 28.7041;
+  const baseLng = Number.isFinite(lng) ? lng : 77.1025;
+
+  const offsets = [
+    [0.0009, 0.0009],
+    [0.001, 0.0015],
+    [0.0018, 0.0004],
+  ];
+
+  const data = offsets.map(([dlat, dlng], i) => ({
+    name: `Worker ${i + 1}`,
+    lat: Math.round((baseLat + dlat) * 1e6) / 1e6,
+    lng: Math.round((baseLng + dlng) * 1e6) / 1e6,
+    isAvailable: true,
+  }));
+
+  res.json({ success: true, data });
+});
+
 export const listAvailableWorkers = asyncHandler(async (req, res) => {
   const workers = await User.find({
     role: "Worker",

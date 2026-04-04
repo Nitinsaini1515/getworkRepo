@@ -6,13 +6,14 @@ import Button from '../UI/Button';
 import Input from '../UI/Input';
 import { Plus, Users, Eye, MoreHorizontal, Zap, MapPin, Clock, DollarSign } from 'lucide-react';
 import Toast from '../UI/Toast';
-import { fetchJobs, createJob, approveJobCompletion } from '../../services/jobsService.js';
+import { fetchJobs, createJob } from '../../services/jobsService.js';
 import { formatRelativeTime } from '../../utils/formatTime.js';
 import { getApiErrorMessage } from '../../utils/getApiErrorMessage.js';
 
 const statusLabel = (s) => {
   if (s === 'completed') return 'Closed';
-  if (s === 'pending') return 'Pending review';
+  if (s === 'in-progress') return 'In progress';
+  if (s === 'applied' || s === 'open') return 'Active';
   return 'Active';
 };
 
@@ -52,17 +53,6 @@ const MyJobs = () => {
 
   const activeCount = jobs.filter((j) => j.status === 'Active').length;
   const totalApplicants = jobs.reduce((a, j) => a + j.applicants, 0);
-
-  const handleApprove = async (raw) => {
-    const id = raw.id || raw._id;
-    try {
-      await approveJobCompletion(id);
-      setToast({ show: true, message: 'Job approved. Payment released to worker.', type: 'success' });
-      load();
-    } catch (e) {
-      setToast({ show: true, message: getApiErrorMessage(e), type: 'error' });
-    }
-  };
 
   const handleQuickJobSubmit = async (e) => {
     e.preventDefault();
@@ -228,11 +218,6 @@ const MyJobs = () => {
                     <p className="text-slate-500 font-medium">Views</p>
                   </div>
                   <div className="flex items-center gap-2 pl-4 border-l border-slate-800">
-                    {job.raw?.status === 'pending' && (
-                      <Button className="px-3 py-2 text-sm" type="button" onClick={() => handleApprove(job.raw)}>
-                        Approve work
-                      </Button>
-                    )}
                     <Button variant="secondary" className="px-3 py-2 text-sm hidden sm:flex" type="button">View Applicants</Button>
                     <button type="button" className="p-2 text-slate-400 hover:text-white bg-slate-800/50 rounded-lg hover:bg-slate-700 transition-colors">
                       <MoreHorizontal size={18} />

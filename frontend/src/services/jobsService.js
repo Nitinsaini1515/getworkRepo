@@ -5,6 +5,11 @@ export async function fetchJobs() {
   return data.data.jobs;
 }
 
+export async function fetchAppliedJobs() {
+  const { data } = await api.get("/jobs/applied");
+  return data.data.jobs;
+}
+
 export async function fetchJobById(id) {
   const { data } = await api.get(`/jobs/${id}`);
   return data.data.job;
@@ -25,17 +30,19 @@ export async function acceptApplicant(jobId, workerId) {
   return data.data.job;
 }
 
-export async function uploadJobProof(jobId, file) {
-  const form = new FormData();
-  form.append("jobId", jobId);
-  form.append("proof", file);
-  const { data } = await api.post("/jobs/upload-proof", form, {
-    headers: { "Content-Type": "multipart/form-data" },
-  });
+export async function startJob(jobId) {
+  const { data } = await api.post(`/jobs/start/${jobId}`);
   return data.data.job;
 }
 
-export async function approveJobCompletion(jobId) {
-  const { data } = await api.post("/jobs/approve", { jobId });
-  return data.data;
+export async function completeJob(jobId, files) {
+  const form = new FormData();
+  const arr = Array.isArray(files) ? files : [files];
+  for (const f of arr) {
+    if (f) form.append("photos", f);
+  }
+  const { data } = await api.post(`/jobs/complete/${jobId}`, form, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+  return data.data.job;
 }

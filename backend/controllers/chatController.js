@@ -14,7 +14,7 @@ function peerUserIds(job) {
 }
 
 function canUseChat(job) {
-  return ["applied", "accepted", "pending", "completed"].includes(job.status);
+  return ["applied", "in-progress", "completed"].includes(job.status);
 }
 
 export const sendMessage = asyncHandler(async (req, res) => {
@@ -35,7 +35,7 @@ export const sendMessage = asyncHandler(async (req, res) => {
     throw new ApiError(404, "Job not found");
   }
   if (!canUseChat(job)) {
-    throw new ApiError(403, "Chat is only available after a job has applications or has been accepted");
+    throw new ApiError(403, "Chat is only available once the job has applications or is in progress");
   }
 
   const peers = peerUserIds(job);

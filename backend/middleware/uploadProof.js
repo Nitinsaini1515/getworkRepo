@@ -16,7 +16,7 @@ const storage = multer.diskStorage({
   },
 });
 
-export const uploadProofMiddleware = multer({
+const multerOpts = {
   storage,
   limits: { fileSize: 8 * 1024 * 1024 },
   fileFilter: (_req, file, cb) => {
@@ -26,4 +26,9 @@ export const uploadProofMiddleware = multer({
     }
     cb(null, true);
   },
-});
+};
+
+export const uploadProofMiddleware = multer(multerOpts);
+
+/** Multiple completion photos (field name: photos) */
+export const uploadCompletionMiddleware = multer(multerOpts);

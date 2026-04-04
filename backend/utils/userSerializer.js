@@ -21,15 +21,15 @@ export async function getUserJobContext(userId, role) {
   const jobApplied = await Job.exists({ "applicants.user": uid });
   const jobAccepted = await Job.exists({
     worker: uid,
-    status: { $in: ["accepted", "pending", "completed"] },
+    status: { $in: ["applied", "in-progress", "completed"] },
   });
   const activeJobsAsWorker = await Job.countDocuments({
     worker: uid,
-    status: { $in: ["accepted", "pending"] },
+    status: { $in: ["applied", "in-progress"] },
   });
   const activeJobsAsEmployer = await Job.countDocuments({
     employer: uid,
-    status: { $in: ["open", "applied", "accepted", "pending"] },
+    status: { $in: ["open", "applied", "in-progress"] },
   });
 
   const activeJobs = role === "Worker" ? activeJobsAsWorker : activeJobsAsEmployer;

@@ -11,6 +11,7 @@ import walletRoutes from "./routes/walletRoutes.js";
 import feedbackRoutes from "./routes/feedbackRoutes.js";
 import sosRoutes from "./routes/sosRoutes.js";
 import workerRoutes from "./routes/workerRoutes.js";
+import workersRoutes from "./routes/workersRoutes.js";
 import { ApiError } from "./utils/ApiError.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -52,6 +53,7 @@ app.use("/api/wallet", walletRoutes);
 app.use("/api/feedback", feedbackRoutes);
 app.use("/api/sos", sosRoutes);
 app.use("/api/worker", workerRoutes);
+app.use("/api/workers", workersRoutes);
 
 app.use((req, res, next) => {
   next(new ApiError(404, `Route not found: ${req.method} ${req.originalUrl}`));
